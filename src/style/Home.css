@@ -1,0 +1,162 @@
+/* Asegurar que no haya márgenes ni paddings globales */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Imagen de fondo adaptada */
+.home-container {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    flex-direction: column;
+    background: url('../src/assets/Img2.jpg') no-repeat center center/cover;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    position: relative;
+}
+
+/* Contenido principal */
+.home-content {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Sección izquierda */
+.left-section {
+    width: 45%;
+    text-align: center;
+}
+
+.welcome-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.welcome-description {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+}
+
+.register-btn {
+    background-color: #ff5722;
+    color: white;
+    transition: background 0.3s ease;
+}
+
+.register-btn:hover {
+    background-color: #e64a19;
+}
+
+.login-btn {
+    background-color: #37474f;
+    color: white;
+    transition: background 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #263238;
+}
+
+/* Sección derecha */
+.right-section {
+    width: 45%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+}
+
+.surprise-box {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.surprise-box:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Mensaje sorpresa */
+.surprise-message {
+    position: absolute;
+    top: -90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-size: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    animation: fadeInOut 3s ease forwards;
+}
+
+/* Animación para el mensaje */
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .home-content {
+        flex-direction: column;
+    }
+
+    .left-section,
+    .right-section {
+        width: 100%;
+    }
+
+    .surprise-box {
+        width: 120px;
+        height: 120px;
+    }
+
+    .surprise-message {
+        font-size: 1.2rem;
+    }
+}
