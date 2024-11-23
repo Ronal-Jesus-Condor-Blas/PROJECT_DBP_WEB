@@ -1,27 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import { useNavigate } from 'react-router-dom';
 import { login, JwtAuthResponse, LoginReq } from '../Api';
-
-// Global CSS reset styles
-const styles = `
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  html, body, #root {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-`;
+import { useAuth } from '../AuthContext'; // Importa el contexto de autenticación
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState(''); // Estado para mensaje de éxito
-    const navigate = useNavigate(); // Hook para redirigir
+    const [successMessage, setSuccessMessage] = useState('');
+    const { setToken } = useAuth(); // Usa funciones del contexto para manejar token y usuario
+    const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -29,147 +17,93 @@ const Login: React.FC = () => {
 
         try {
             const response: JwtAuthResponse = await login(loginReq);
-            localStorage.setItem('token', response.token); // Guardar token en localStorage
-            console.log("Token en el local storage: ", localStorage.getItem('token'));
+            setToken(response.token); // Guarda el token en el contexto
             setSuccessMessage('¡Inicio de sesión exitoso!');
-            setError(''); // Limpiar errores previos
-            // Redirigir a la página de Home
-            setTimeout(() => navigate('/'), 1000); // Espera 1 segundo antes de redirigir
+            setError('');
+            setTimeout(() => navigate('/'), 1000);
         } catch (err) {
-            console.error('Login failed:', err); // Log de error
+            console.error('Login failed:', err);
             setError('Inicio de sesión fallido. Por favor, verifica tus credenciales.');
-            setSuccessMessage(''); // Limpiar mensajes de éxito previos
+            setSuccessMessage('');
         }
     };
 
     return (
-        <>
-            {/* Inject global styles */}
-            <style>{styles}</style>
-            <div
-                style={{
-                    position: 'relative',
-                    backgroundImage: `url('../src/assets/Img2.jpg')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    width: '100vw',
-                    height: '100vh',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    color: '#fff',
-                }}
-            >
-                {/* Botón FoodTails */}
-                <a
-                    href="/"
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
-                        background: '#8B4513',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        borderRadius: '5px',
-                        textDecoration: 'none',
-                        fontWeight: 'bold',
-                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
-                        cursor: 'pointer',
-                    }}
-                >
-                    FoodTails
-                </a>
+        <div
+            className="flex items-center justify-center min-h-screen bg-cover bg-center bg-no-repeat relative"
+            style={{
+                backgroundImage: `url('../src/assets/Img2.jpg')`, // Cambiar por la ruta de la imagen
+            }}
+        >
+            {/* Superposición */}
+            <div className="absolute inset-0 bg-black bg-opacity-60"></div>
 
-                <div
-                    style={{
-                        background: 'rgba(0, 0, 0, 0.7)',
-                        padding: '30px',
-                        borderRadius: '10px',
-                        width: '90%',
-                        maxWidth: '400px',
-                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-                    }}
-                >
-                    <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Login</h2>
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    borderRadius: '5px',
-                                    border: '1px solid #ccc',
-                                    outline: 'none',
-                                    color: '#000',
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    borderRadius: '5px',
-                                    border: '1px solid #ccc',
-                                    outline: 'none',
-                                    color: '#000',
-                                }}
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            style={{
-                                background: '#8B4513',
-                                color: '#fff',
-                                padding: '10px',
-                                borderRadius: '5px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                            }}
-                        >
-                            Login
-                        </button>
-                    </form>
-                    {/* Mostrar mensajes de éxito o error */}
-                    {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-                    {successMessage && <p style={{ color: 'green', marginTop: '10px' }}>{successMessage}</p>}
-                    
-                    {/* Links adicionales */}
-                    <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                        <p style={{ marginBottom: '10px' }}>
-                            ¿No tienes cuenta?{' '}
-                            <a
-                                href="/register"
-                                style={{ color: '#4CAF50', textDecoration: 'none', fontWeight: 'bold' }}
-                            >
-                                Regístrate
-                            </a>
-                        </p>
-                        <p>
-                            ¿Olvidaste tu contraseña?{' '}
-                            <a
-                                href="/forgot-password"
-                                style={{ color: '#4CAF50', textDecoration: 'none', fontWeight: 'bold' }}
-                            >
-                                Recuperar
-                            </a>
-                        </p>
+            {/* Botón FoodTails */}
+            <a
+                href="/"
+                className="absolute top-6 left-6 bg-yellow-600 hover:bg-yellow-700 text-black px-4 py-2 rounded-lg text-lg font-semibold shadow-md"
+            >
+                FoodTails
+            </a>
+
+            {/* Formulario */}
+            <div className="relative z-10 bg-white bg-opacity-90 p-6 rounded-xl shadow-xl w-full max-w-md mx-4">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Iniciar Sesión</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-2 rounded-lg transition duration-300"
+                    >
+                        Iniciar Sesión
+                    </button>
+                </form>
+                {/* Mostrar mensajes de éxito o error */}
+                {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+                {successMessage && <p className="text-green-500 text-center mt-4">{successMessage}</p>}
+
+                {/* Links adicionales */}
+                <div className="mt-4 text-center">
+                    <p className="mb-2">
+                        ¿No tienes cuenta?{' '}
+                        <a
+                            href="/register"
+                            className="text-yellow-500 hover:text-yellow-600 font-semibold"
+                        >
+                            Regístrate
+                        </a>
+                    </p>
+                    <p>
+                        ¿Olvidaste tu contraseña?{' '}
+                        <a
+                            href="/forgot-password"
+                            className="text-yellow-500 hover:text-yellow-600 font-semibold"
+                        >
+                            Recuperar
+                        </a>
+                    </p>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
