@@ -102,7 +102,7 @@ const Register: React.FC = () => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-2 rounded-lg transition duration-300"
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 rounded-lg transition duration-300"
                     >
                         Registrar
                     </button>

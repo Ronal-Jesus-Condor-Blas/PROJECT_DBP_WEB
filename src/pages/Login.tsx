@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { login, JwtAuthResponse, LoginReq } from '../Api';
-import { useAuth } from '../AuthContext'; // Importa el contexto de autenticación
+import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-    const { setToken } = useAuth(); // Usa funciones del contexto para manejar token y usuario
+    const { setToken, setUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -17,7 +17,8 @@ const Login: React.FC = () => {
 
         try {
             const response: JwtAuthResponse = await login(loginReq);
-            setToken(response.token); // Guarda el token en el contexto
+            setToken(response.token);
+            setUser(response.user);
             setSuccessMessage('¡Inicio de sesión exitoso!');
             setError('');
             setTimeout(() => navigate('/'), 1000);
@@ -72,7 +73,7 @@ const Login: React.FC = () => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-semibold py-2 rounded-lg transition duration-300"
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 rounded-lg transition duration-300"
                     >
                         Iniciar Sesión
                     </button>

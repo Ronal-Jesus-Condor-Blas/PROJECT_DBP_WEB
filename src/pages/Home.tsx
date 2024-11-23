@@ -31,7 +31,7 @@ const Home: React.FC = () => {
                         <img
                             src="fancy_restaurant.jpg"
                             alt="Delicious food"
-                            className="w-full max-w-md rounded-lg shadow-md mb-6"
+                            className="w-full max-w-md rounded-lg shadow-md mb-6 border-4 border-yellow-500"
                         />
                         <CardHeader className="text-center">
                             <CardTitle className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4">
@@ -60,9 +60,9 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* Sección derecha */}
-                    <div className="p-6 bg-gray-50 flex flex-col justify-center">
+                    <div className="p-6 bg-yellow-100 flex flex-col justify-center">
                         {surpriseMessage && (
-                            <Alert className="mb-4 bg-purple-600 text-white">
+                            <Alert className="mb-4 bg-black text-white font-semibold">
                                 <AlertDescription>{surpriseMessage}</AlertDescription>
                             </Alert>
                         )}
@@ -73,14 +73,15 @@ const Home: React.FC = () => {
                                 "La comida une culturas.",
                                 "Un buen café empieza el día con magia.",
                             ].map((message, index) => (
-                                <Button
+                                <div
                                     key={index}
-                                    variant="secondary"
+                                    className="flex items-center justify-center border-2 border-yellow-500 bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-yellow-500 transition"
                                     onClick={() => handleSurpriseClick(message)}
-                                    className="w-full bg-white text-gray-800 hover:bg-gray-100 shadow-md"
                                 >
-                                    🎁 Caja sorpresa {index + 1}
-                                </Button>
+                                    <p className="text-center text-gray-800 font-bold">
+                                        🎁 Caja sorpresa {index + 1}
+                                    </p>
+                                </div>
                             ))}
                         </div>
                     </div>

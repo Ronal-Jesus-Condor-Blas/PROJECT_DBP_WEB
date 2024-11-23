@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 // Define the base URL for the backend
-const BASE_URL = 'http://localhost:8080';
+export const BASE_URL = 'http://localhost:8080';
 
 // Define interfaces based on the backend entities
 export interface User {
@@ -18,6 +18,7 @@ export interface User {
 
 export interface JwtAuthResponse {
     token: string;
+    user: User;
 }
 
 export interface LoginReq {
@@ -77,7 +78,6 @@ export interface Restaurant {
 }
 
 // Métodos para obtener datos del backend
-
 
 
 
@@ -142,6 +142,8 @@ export interface Post {
     createdDate: string;
     status: string;
     userId: number;
+    userName: string;
+    userProfilePicture: string;
 }
 
 export interface PostRequestDto {
@@ -159,30 +161,377 @@ export interface PostResponseDto {
     createdDate: string;
     status: string;
     userId: number;
+    userName: string;
+    userProfilePicture: "";
 }
 
 // Function to get all posts
-export const getAllPosts = async (): Promise<PostResponseDto[]> => {
-    const response = await axios.get<PostResponseDto[]>(`${BASE_URL}/posts`);
+export const getAllPosts = async (token: string): Promise<PostResponseDto[]> => {
+    const response = await axios.get<PostResponseDto[]>(`${BASE_URL}/posts`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
     return response.data;
 };
 
-// Function to create a new post
-export const createPost = async (postRequestDto: PostRequestDto, image: File, token: string): Promise<PostResponseDto> => {
-    const formData = new FormData();
-    formData.append('post', JSON.stringify(postRequestDto));
-    formData.append('image', image);
-  
-    const response = await axios.post<PostResponseDto>(`${BASE_URL}/posts`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
+export const updatePost = async (
+    postId: number,
+    postRequestDto: PostRequestDto,
+    token: string
+): Promise<PostResponseDto> => {
+    const response = await axios.put<PostResponseDto>(`${BASE_URL}/posts/${postId}`, postRequestDto, {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
     });
+
     return response.data;
-  };
+};
+
+
+export const createPost = async (
+    postRequestDto: PostRequestDto,
+    image: File | null,
+    token: string
+): Promise<PostResponseDto> => {
+    try {
+        const formData = new FormData();
+
+        // Convertir el postRequestDto a un blob JSON
+        formData.append(
+            "post",
+            new Blob([JSON.stringify(postRequestDto)], { type: "application/json" })
+        );
+
+        // Adjuntar la imagen si existe
+        if (image) {
+            formData.append("image", image);
+        }
+
+        // Hacer la petición al backend
+        const response = await axios.post<PostResponseDto>(`${BASE_URL}/posts`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return response.data; // Devolver los datos del post creado
+    } catch (error: any) {
+        // Lanzar el error con más información para manejarlo en el frontend
+        throw error.response
+            ? new Error(error.response.data.message || "Error al crear el post")
+            : new Error("Error de red o problema desconocido");
+    }
+};
+
+
 
 // Function to delete a post by ID
 export const deletePost = async (postId: number): Promise<void> => {
     await axios.delete(`${BASE_URL}/posts/${postId}`);
+};
+
+export const fetchCurrentUserDetails = async (userId: number) => {
+    const response = await fetch(`${BASE_URL}/users/${userId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Error fetching user details");
+    }
+
+    return response.json();
+};
+
+export interface CommentRequestDto {
+    userId: number;
+    postId: number;
+    content: string;
+}
+
+export interface CommentResponseDto {
+    commentId: number;
+    userId: number;
+    postId: number;
+    content: string;
+    commentDate: string; // Usa string porque las fechas suelen venir en este formato desde la API
+}
+
+
+export const getCommentsByPostId = async (
+    postId: number,
+    token: string
+): Promise<CommentResponseDto[]> => {
+    const response = await axios.get<CommentResponseDto[]>(`${BASE_URL}/comments/post/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+export const createComment = async (
+    commentRequestDto: CommentRequestDto,
+    token: string
+): Promise<CommentResponseDto> => {
+    const response = await axios.post<CommentResponseDto>(`${BASE_URL}/comments`, commentRequestDto, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+};
+
+
+export const updateComment = async (
+    commentId: number,
+    commentRequestDto: CommentRequestDto,
+    token: string
+): Promise<CommentResponseDto> => {
+    const response = await axios.put<CommentResponseDto>(
+        `${BASE_URL}/comments/${commentId}`,
+        commentRequestDto,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+    return response.data;
+};
+
+export const deleteComment = async (commentId: number, token: string): Promise<void> => {
+    await axios.delete(`${BASE_URL}/comments/${commentId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
+// Modelo para los datos de los restaurantes
+export interface Restaurant {
+    restaurantId: number;
+    name: string;
+    email: string;
+    location: {
+        lat: number;
+        lng: number;
+    };
+    status: 'OPEN' | 'CLOSED';
+    createdDate: string; // Asegúrate de que el tipo coincida con el formato de fecha
+}
+
+// Modelo para el request de crear/editar restaurantes
+export interface RestaurantRequestDto {
+    name: string;
+    location: string; // Cambiar a string
+    email: string;
+    status: 'OPEN' | 'CLOSED';
+}
+
+
+// Función para obtener todos los restaurantes
+export const getAllRestaurants = async (token: string) => {
+    const response = await axios.get(`${BASE_URL}/restaurants`, {
+        headers: {
+            Authorization: `Bearer ${token}`, // Agregar token en las cabeceras
+        },
+    });
+    return response.data;
+};
+
+// Función para obtener un restaurante por ID
+export const getRestaurantById = async (id: number): Promise<Restaurant> => {
+    const response = await axios.get(`${BASE_URL}/restaurants/${id}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Agregar token en las cabeceras
+        },
+    });
+    return response.data;
+};
+
+// Función para crear un nuevo restaurante
+export const createRestaurant = async (data: RestaurantRequestDto): Promise<Restaurant> => {
+    const response = await axios.post(`${BASE_URL}/restaurants`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Agregar token en las cabeceras
+        },
+    });
+    return response.data;
+};
+
+// Función para editar un restaurante existente
+export const updateRestaurant = async (
+    id: number,
+    data: RestaurantRequestDto
+): Promise<Restaurant> => {
+    const response = await axios.put(`${BASE_URL}/restaurants/${id}`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Agregar token en las cabeceras
+        },
+    });
+    return response.data;
+};
+
+// Función para eliminar un restaurante por ID
+export const deleteRestaurant = async (id: number): Promise<void> => {
+    await axios.delete(`${BASE_URL}/restaurants/${id}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Agregar token en las cabeceras
+        },
+    });
+};
+
+export interface Food {
+    foodId: number;
+    name: string;
+    description: string;
+    price: number;
+    restaurantId: number;
+    status: string; // Ejemplo: 'AVAILABLE' o 'UNAVAILABLE'
+}
+
+export interface FoodRequestDto {
+    name: string;
+    description: string;
+    price: number;
+    restaurantId: number;
+    status: string;
+}
+
+// Obtener todos los platillos de un restaurante
+export const getFoodsByRestaurantId = async (restaurantId: number): Promise<Food[]> => {
+    const response = await axios.get(`${BASE_URL}/foods/restaurants/${restaurantId}/foods`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Crear un nuevo platillo
+export const createFood = async (data: FoodRequestDto): Promise<Food> => {
+    const response = await axios.post(`${BASE_URL}/foods`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Actualizar un platillo existente
+export const updateFood = async (foodId: number, data: FoodRequestDto): Promise<Food> => {
+    const response = await axios.put(`${BASE_URL}/foods/${foodId}`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Eliminar un platillo
+export const deleteFood = async (foodId: number): Promise<void> => {
+    await axios.delete(`${BASE_URL}/foods/${foodId}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+};
+
+// Modelo para las calificaciones de los platillos
+export interface FoodRating {
+    foodRatingId: number;
+    id: number;
+    rating: number;
+    comment: string;
+    foodId: number;
+    createdAt: string;
+}
+
+export interface FoodRatingRequestDto {
+    rating: number;
+    comment: string;
+}
+
+// Obtener todas las calificaciones de un platillo por su ID
+export const getFoodRatingsByFoodId = async (foodId: number) => {
+    const response = await axios.get(`${BASE_URL}/foodratings/food/${foodId}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Obtener una calificación específica por su ID
+export const getFoodRatingById = async (id: number) => {
+    const response = await axios.get(`${BASE_URL}/foodratings/${id}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Crear una nueva calificación para un platillo
+export const createFoodRating = async (data: { foodId: number; userId: number; rating: number; comment: string }) => {
+    const response = await axios.post(`${BASE_URL}/foodratings`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Actualizar parcialmente una calificación
+export const patchFoodRating = async (id: number, data: { rating?: number; comment?: string }) => {
+    const response = await axios.patch(`${BASE_URL}/foodratings/${id}`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Actualizar completamente una calificación
+export const updateFoodRating = async (id: number, data: { rating: number; comment: string }) => {
+    const response = await axios.put(`${BASE_URL}/foodratings/${id}`, data, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Eliminar una calificación por su ID
+export const deleteFoodRating = async (id: number) => {
+    const response = await axios.delete(`${BASE_URL}/foodratings/${id}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Obtener todas las calificaciones hechas por un usuario
+export const getFoodRatingsByUserId = async (userId: number) => {
+    const response = await axios.get(`${BASE_URL}/foodratings/users/${userId}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
+};
+
+// Obtener todos los comentarios de un platillo específico
+export const getCommentsByFoodId = async (foodId: number) => {
+    const response = await axios.get(`${BASE_URL}/foodratings/foods/${foodId}/comments`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
+    return response.data;
 };
