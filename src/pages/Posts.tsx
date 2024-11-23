@@ -2,20 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/AuthContext";
 import {
-    getAllPosts,
-    createPost,
-    deletePost,
     getCommentsByPostId,
     createComment,
-    Post,
-    PostRequestDto,
     CommentResponseDto,
 } from "@/Api";
+
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import CommentsModal from "@/components/CommentsModal";
 import EditPostModal from "@/components/EditPostModal";
 import PostsList from "@/components/PostList";
+import { toast } from 'sonner';
+import { createPost, deletePost, getAllPosts, Post, PostRequestDto, updatePost } from "@/api/postsApi";
 
 const Posts: React.FC = () => {
     const { token, user } = useAuth();
@@ -44,7 +42,6 @@ const Posts: React.FC = () => {
             try {
                 const fetchedPosts = await getAllPosts(token);
                 setPosts(fetchedPosts);
-                console.log("Posts fetched:", fetchedPosts);
             } catch (error) {
                 console.error("Error fetching posts:", error);
             } finally {
@@ -86,20 +83,36 @@ const Posts: React.FC = () => {
         if (!user || !token) return;
 
         try {
-            const savedPost = await createPost(formData, image, token);
+            const savedPost = selectedPost
+                ? await updatePost(selectedPost.postId, formData, image, token)
+                : await createPost(formData, image, token);
 
-            setPosts((prevPosts) =>
-                selectedPost
-                    ? prevPosts.map((post) => (post.postId === savedPost.postId ? savedPost : post))
-                    : [savedPost, ...prevPosts]
-            );
+            if (savedPost) {
+                setPosts((prevPosts) =>
+                    selectedPost
+                        ? prevPosts.map((post) => (post.postId === savedPost.postId ? savedPost : post))
+                        : [savedPost, ...prevPosts]
+                );
 
-            setEditModalOpen(false);
-            setSelectedPost(null);
-            setFormData({ title: "", content: "", userId: Number(user.userId), status: "ACTIVE" });
-            setImage(null);
+                toast.success("Post actualizado correctamente");
+                setEditModalOpen(false);
+                setSelectedPost(null);
+                setFormData({ title: "", content: "", userId: Number(user.userId), status: "ACTIVE" });
+                setImage(null);
+            }
         } catch (error) {
-            console.error("Error saving post:", error);
+            console.error("Error handling post:", error);
+            toast.error("No se pudo actualizar el post");
+        }
+    };
+
+
+    const handleDeletePost = async (postId: number, token: string) => {
+        try {
+            await deletePost(postId, token);
+            setPosts((prevPosts) => prevPosts.filter((post) => post.postId !== postId));
+        } catch (error) {
+            console.error('Error deleting post:', error);
         }
     };
 
@@ -142,7 +155,14 @@ const Posts: React.FC = () => {
                             });
                             setEditModalOpen(true);
                         }}
-                        onDelete={(postId: number) => deletePost(postId)}
+
+                        onDelete={(postId: number) => {
+                            if (token) {
+                                handleDeletePost(postId, token);
+                            } else {
+                                console.error("Token is null");
+                            }
+                        }}
                         onViewComments={(postId: number) => fetchComments(postId)}
                     />
                 )}

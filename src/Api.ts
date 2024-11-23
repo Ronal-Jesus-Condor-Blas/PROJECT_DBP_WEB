@@ -77,10 +77,6 @@ export interface Restaurant {
     country?: string;
 }
 
-// Métodos para obtener datos del backend
-
-
-
 // api.ts
 
 // Interfaces adicionales
@@ -133,106 +129,6 @@ export const searchLocation = async (address: string): Promise<{ lat: number; ln
     }
 };
 
-
-export interface Post {
-    postId: number;
-    title: string;
-    content: string;
-    image: string;
-    createdDate: string;
-    status: string;
-    userId: number;
-    userName: string;
-    userProfilePicture: string;
-}
-
-export interface PostRequestDto {
-    title: string;
-    content: string;
-    userId: number;
-    status: string;
-}
-
-export interface PostResponseDto {
-    postId: number;
-    title: string;
-    content: string;
-    image: string;
-    createdDate: string;
-    status: string;
-    userId: number;
-    userName: string;
-    userProfilePicture: "";
-}
-
-// Function to get all posts
-export const getAllPosts = async (token: string): Promise<PostResponseDto[]> => {
-    const response = await axios.get<PostResponseDto[]>(`${BASE_URL}/posts`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return response.data;
-};
-
-export const updatePost = async (
-    postId: number,
-    postRequestDto: PostRequestDto,
-    token: string
-): Promise<PostResponseDto> => {
-    const response = await axios.put<PostResponseDto>(`${BASE_URL}/posts/${postId}`, postRequestDto, {
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    return response.data;
-};
-
-
-export const createPost = async (
-    postRequestDto: PostRequestDto,
-    image: File | null,
-    token: string
-): Promise<PostResponseDto> => {
-    try {
-        const formData = new FormData();
-
-        // Convertir el postRequestDto a un blob JSON
-        formData.append(
-            "post",
-            new Blob([JSON.stringify(postRequestDto)], { type: "application/json" })
-        );
-
-        // Adjuntar la imagen si existe
-        if (image) {
-            formData.append("image", image);
-        }
-
-        // Hacer la petición al backend
-        const response = await axios.post<PostResponseDto>(`${BASE_URL}/posts`, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        return response.data; // Devolver los datos del post creado
-    } catch (error: any) {
-        // Lanzar el error con más información para manejarlo en el frontend
-        throw error.response
-            ? new Error(error.response.data.message || "Error al crear el post")
-            : new Error("Error de red o problema desconocido");
-    }
-};
-
-
-
-// Function to delete a post by ID
-export const deletePost = async (postId: number): Promise<void> => {
-    await axios.delete(`${BASE_URL}/posts/${postId}`);
-};
 
 export const fetchCurrentUserDetails = async (userId: number) => {
     const response = await fetch(`${BASE_URL}/users/${userId}`, {

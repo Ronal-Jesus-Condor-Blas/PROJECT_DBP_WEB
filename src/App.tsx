@@ -7,13 +7,13 @@ import Register from './pages/Register';
 import Inicio from './pages/Inicio';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
-import CreatePostForm from './components/CreatePostForm';
 import NotFound from './pages/NotFound';
 import { AuthProvider, useAuth } from './AuthContext';
 import Posts from './pages/Posts';
 import RestaurantsPage from './pages/RestaurantsPage';
 import FoodsPage from './pages/FoodsPage';
 import FoodRatingsPage from './pages/FoodsRatingPage';
+import { Toaster } from 'sonner';
 
 const ProtectedRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
   const { token } = useAuth();
@@ -43,7 +43,6 @@ const App: React.FC = () => {
           <Route path="/inicio" element={<ProtectedRoute element={<Inicio />} />} />
           <Route path="/chat" element={<ProtectedRoute element={<Chat />} />} />
           <Route path="/posts" element={<ProtectedRoute element={<Posts />} />} />
-          <Route path="/create-post" element={<ProtectedRoute element={<CreatePostForm />} />} />
           <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
           <Route path="/restaurants" element={<ProtectedRoute element={<RestaurantsPage />} />} />
           {/* Ruta para los platillos de un restaurante */}
@@ -55,6 +54,7 @@ const App: React.FC = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
+      <Toaster />
     </AuthProvider>
   );
 };
