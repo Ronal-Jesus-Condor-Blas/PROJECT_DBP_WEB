@@ -17,7 +17,7 @@ export interface Post {
 export interface PostRequestDto {
     title: string;
     content: string;
-    userId: number;
+    userId: string;
     status: string;
 }
 

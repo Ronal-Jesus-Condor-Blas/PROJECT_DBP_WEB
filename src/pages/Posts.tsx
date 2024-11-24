@@ -30,7 +30,7 @@ const Posts: React.FC = () => {
     const [formData, setFormData] = useState<PostRequestDto>({
         title: "",
         content: "",
-        userId: Number(user?.userId) || 0,
+        userId: user?.userId?.toString() || "0",
         status: "ACTIVE",
     });
 
@@ -97,7 +97,7 @@ const Posts: React.FC = () => {
                 toast.success("Post actualizado correctamente");
                 setEditModalOpen(false);
                 setSelectedPost(null);
-                setFormData({ title: "", content: "", userId: Number(user.userId), status: "ACTIVE" });
+                setFormData({ title: "", content: "", userId: String(user.userId), status: "ACTIVE" });
                 setImage(null);
             }
         } catch (error) {
@@ -150,7 +150,7 @@ const Posts: React.FC = () => {
                             setFormData({
                                 title: post.title,
                                 content: post.content,
-                                userId: post.userId,
+                                userId: post.userId.toString(),
                                 status: post.status,
                             });
                             setEditModalOpen(true);

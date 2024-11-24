@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
-import { useAuth } from '../AuthContext';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { BASE_URL } from '@/Api';
-import { FaArrowLeft, FaEdit, FaSignOutAlt } from 'react-icons/fa';
+import React, { useState } from "react";
+import { useAuth } from "../AuthContext";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { BASE_URL } from "@/Api";
+import { FaArrowLeft, FaEdit, FaSignOutAlt } from "react-icons/fa";
+import { toast } from "sonner";
+import Dropzone from "react-dropzone";
 
 const Profile: React.FC = () => {
   const { user, setToken, setUser } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState({
-    name: user?.name || '',
-    bio: user?.bio || '',
+    name: user?.name || "",
+    bio: user?.bio || "",
   });
+  const [newImage, setNewImage] = useState<File | null>(null);
 
   if (!user) {
     return (
@@ -27,34 +30,56 @@ const Profile: React.FC = () => {
   const handleLogout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    window.location.href = '/login';
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
+    window.location.href = "/login";
   };
 
   const handleEditSubmit = async () => {
+    const formData = new FormData();
+
+    // Adjuntar datos del usuario
+    formData.append(
+      "user",
+      new Blob(
+        [JSON.stringify({ name: editData.name, bio: editData.bio })],
+        { type: "application/json" }
+      )
+    );
+
+    // Adjuntar la nueva imagen si se seleccionó
+    if (newImage) {
+      formData.append("image", newImage);
+    }
+
     try {
       const response = await fetch(`${BASE_URL}/users/${user.userId}`, {
-        method: 'PATCH',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify({
-          name: editData.name,
-          bio: editData.bio,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Error al actualizar el perfil');
+        throw new Error("Error al actualizar el perfil");
       }
 
       const updatedUser = await response.json();
-      setUser(updatedUser); // Actualiza el usuario en el contexto
-      setIsEditModalOpen(false); // Cierra el modal
+      setUser(updatedUser);
+      setIsEditModalOpen(false);
+
+      toast.success("Perfil actualizado correctamente");
     } catch (error) {
       console.error(error);
+      toast.error("No se pudo actualizar el perfil");
+    }
+  };
+
+  const handleDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      setNewImage(acceptedFiles[0]);
+      toast.info("Nueva imagen seleccionada");
     }
   };
 
@@ -63,30 +88,29 @@ const Profile: React.FC = () => {
       className="min-h-screen bg-cover bg-center flex flex-col items-center justify-center p-6 relative"
       style={{
         backgroundImage: `url('bg.jpg')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      {/* Capa de desenfoque y oscurecimiento */}
-      <div
-        className={`absolute inset-0 bg-black/60 ${isEditModalOpen ? 'backdrop-blur-none' : 'backdrop-blur-md'
-          }`}
-      ></div>
+      <div className={`absolute inset-0 bg-black/60 ${isEditModalOpen ? "backdrop-blur-none" : "backdrop-blur-md"}`}></div>
 
-      {/* Botón para regresar */}
       <div className="absolute top-4 left-4 z-20">
         <Button
           variant="ghost"
           className="flex items-center text-white hover:bg-transparent hover:text-white focus-visible:outline-none"
-          onClick={() => (window.location.href = '/')}
+          onClick={() => (window.location.href = "/")}
         >
           <FaArrowLeft className="mr-2" /> Regresar
         </Button>
       </div>
 
-      {/* Card del perfil */}
       <Card className="w-full max-w-2xl bg-white/90 shadow-2xl rounded-lg z-20">
         <CardHeader className="flex items-center space-x-4">
+          <img
+            src={user.profilePicture || "placeholder.jpg"}
+            alt="Foto de perfil"
+            className="w-24 h-24 rounded-full object-cover border border-gray-300"
+          />
           <div className="flex flex-col">
             <CardTitle className="text-3xl font-bold flex items-center justify-center">
               {user.name}
@@ -103,7 +127,7 @@ const Profile: React.FC = () => {
             <h3 className="text-lg font-semibold">Información Personal</h3>
             <Separator className="my-2" />
             <p><strong>Nombre:</strong> {user.name}</p>
-            <p><strong>Biografía:</strong> {user.bio || 'No especificada'}</p>
+            <p><strong>Biografía:</strong> {user.bio || "No especificada"}</p>
             <p><strong>Rol:</strong> {user.userType}</p>
           </div>
         </CardContent>
@@ -117,7 +141,6 @@ const Profile: React.FC = () => {
         </CardFooter>
       </Card>
 
-      {/* Modal para editar el perfil */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="bg-white p-6 rounded-lg shadow-xl z-50">
           <DialogHeader>
@@ -139,6 +162,21 @@ const Profile: React.FC = () => {
                 onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
                 className="border border-gray-300 rounded-lg w-full"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nueva Foto de Perfil</label>
+              <Dropzone onDrop={handleDrop} multiple={false} accept={{ "image/*": [] }}>
+                {({ getRootProps, getInputProps }) => (
+                  <div
+                    {...getRootProps()}
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-500"
+                  >
+                    <input {...getInputProps()} />
+                    <p>Arrastra una imagen aquí o haz clic para seleccionarla</p>
+                    {newImage && <p className="text-sm text-gray-500 mt-2">{newImage.name}</p>}
+                  </div>
+                )}
+              </Dropzone>
             </div>
           </div>
           <DialogFooter className="flex justify-end space-x-2 mt-4">

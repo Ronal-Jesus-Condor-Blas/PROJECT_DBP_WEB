@@ -1,6 +1,7 @@
+import { Post } from "@/api/postsApi";
 import React from "react";
 import { FaTrash, FaEdit, FaCommentDots } from "react-icons/fa";
-import { Post } from "@/Api";
+import { useAuth } from "@/AuthContext"; // Asegúrate de importar el hook useAuth
 
 interface PostsListProps {
   posts: Post[];
@@ -10,6 +11,14 @@ interface PostsListProps {
 }
 
 const PostsList: React.FC<PostsListProps> = ({ posts, onEdit, onDelete, onViewComments }) => {
+  // Obtener el userId del usuario logueado desde el contexto
+  const { user } = useAuth();
+
+  // Si el usuario no está logueado, podemos retornar null o un mensaje de carga
+  if (!user) {
+    return <div>Cargando...</div>;  // O cualquier UI que prefieras para el estado de carga
+  }
+
   return (
     <div className="flex flex-col items-center space-y-6">
       {posts.map((post) => (
@@ -20,7 +29,13 @@ const PostsList: React.FC<PostsListProps> = ({ posts, onEdit, onDelete, onViewCo
           {/* Encabezado */}
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+              <div className="h-10 w-10 bg-gray-300 rounded-full">
+                <img
+                  src={post.userProfilePicture || "placeholder.jpg"}
+                  alt={post.userName}
+                  className="object-cover w-full h-full rounded-full"
+                />
+              </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-800">{post.userName}</h3>
                 <p className="text-xs text-gray-500">
@@ -59,20 +74,26 @@ const PostsList: React.FC<PostsListProps> = ({ posts, onEdit, onDelete, onViewCo
               <FaCommentDots />
               <span className="text-sm">Comentarios</span>
             </button>
-            <button
-              onClick={() => onEdit(post)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
-            >
-              <FaEdit />
-              <span className="text-sm">Editar</span>
-            </button>
-            <button
-              onClick={() => onDelete(post.postId)}
-              className="flex items-center space-x-2 text-red-600 hover:text-red-800"
-            >
-              <FaTrash />
-              <span className="text-sm">Eliminar</span>
-            </button>
+
+            {/* Mostrar los botones solo si el userId coincide */}
+            {user.userId == String(post.userId) && (
+              <>
+                <button
+                  onClick={() => onEdit(post)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+                >
+                  <FaEdit />
+                  <span className="text-sm">Editar</span>
+                </button>
+                <button
+                  onClick={() => onDelete(post.postId)}
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-800"
+                >
+                  <FaTrash />
+                  <span className="text-sm">Eliminar</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       ))}

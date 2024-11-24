@@ -14,6 +14,7 @@ export interface User {
     userType: string;
     createdAt: string;
     updatedAt: string;
+    profilePicture: string;
 }
 
 export interface JwtAuthResponse {
@@ -31,15 +32,17 @@ export interface RegisterReq {
     password: string;
     name: string;
     bio: string;
-    userType: string;
-
+    userType: 'CONSUMER' | 'INFLUENCER';
+    profilePicture?: File | null; // Cambiar de bio a profilePicture
 }
 
 // Create methods to interact with the backend
 
 // Register a new user
-export const register = async (registerReq: RegisterReq): Promise<JwtAuthResponse> => {
-    const response = await axios.post<JwtAuthResponse>(`${BASE_URL}/auth/register`, registerReq);
+export const register = async (formData: FormData): Promise<JwtAuthResponse> => {
+    const response = await axios.post<JwtAuthResponse>(`${BASE_URL}/auth/register`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }, // Asegúrate de que el tipo de contenido sea multipart/form-data
+    });
     return response.data;
 };
 
